@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Poster Wall</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 10px;
+        }
+
+        .search-section h1 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .search-form {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(61, 61, 61, 0.8);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 5px 15px;
+        }
+
+        .zoom-control label {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 150px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #e50914 0%, #e50914 50%, #666 50%, #666 100%);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border: 2px solid #e50914;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #e50914;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            width: 300px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #e50914;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #f40612;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        button.clear-button {
+            background-color: #444;
+            border: 2px solid #666;
+        }
+
+        button.clear-button:hover {
+            background-color: #555;
+            border-color: #777;
+        }
+
+        .zoom-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .zoom-button {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 20px;
+            line-height: 1;
+            background-color: #e50914;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-button:hover {
+            background-color: #f40612;
+            transform: scale(1.1);
+        }
+
+        .poster-wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .poster-container {
+            position: relative;
+            aspect-ratio: 2/3;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .poster-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(244, 67, 54, 0.9);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            padding: 0;
+            transition: background-color 0.3s;
+        }
+
+        .poster-container:hover .delete-button {
+            display: flex;
+        }
+
+        .delete-button:hover {
+            background-color: #da190b;
+        }
+
+        #message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .error {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        .success {
+            background-color: #00C851;
+            color: white;
+        }
+
+        /* Movie Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .modal-backdrop {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.3);
+        }
+
+        .modal-poster {
+            position: absolute;
+            bottom: -100px;
+            left: 50px;
+            width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .modal-title-section {
+            position: absolute;
+            bottom: 30px;
+            left: 280px;
+            right: 50px;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .modal-metadata {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        .modal-rating {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+
+        .modal-body {
+            padding: 120px 50px 50px;
+            color: white;
+        }
+
+        .modal-section {
+            margin-bottom: 30px;
+        }
+
+        .modal-section-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .cast-list {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cast-item {
+            flex: 1;
+            min-width: 200px;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .trailer-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin-top: 20px;
+        }
+
+        .trailer-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .genres {
+            margin-top: 10px;
+        }
+
+        .genre-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #333;
+            border-radius: 15px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Animation for modal */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        /* Add new styles for pure wall mode */
+        .pure-wall-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: rgba(45, 45, 45, 0.8);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .pure-wall-toggle:hover {
+            background-color: rgba(60, 60, 60, 0.9);
+            transform: scale(1.05);
+        }
+
+        .pure-wall-mode .search-section,
+        .pure-wall-mode .controls {
+            display: none !important;
+        }
+
+        .pure-wall-mode .poster-container {
+            margin-top: 0;
+        }
+
+        .pure-wall-mode .container {
+            padding-top: 0;
+        }
+
+        .director-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .director-section.active {
+            display: block;
+        }
+
+        .director-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .director-name {
+            font-size: 24px;
+            margin: 0 20px;
+            color: #fff;
+        }
+
+        .director-movies {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .director-movie {
+            position: relative;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .director-movie:hover {
+            transform: scale(1.05);
+        }
+
+        .director-movie img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .director-movie .movie-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            font-size: 14px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            text-align: center;
+        }
+
+        .search-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-tab {
+            padding: 8px 16px;
+            background: #3d3d3d;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-tab.active {
+            background: #4CAF50;
+        }
+
+        .search-results {
+            margin-top: 20px;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .movie-item {
+            position: relative;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .movie-item:hover {
+            transform: scale(1.05);
+        }
+
+        .movie-item img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .movie-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            font-size: 14px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            text-align: center;
+        }
+
+        .add-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(76, 175, 80, 0.9);
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .add-button:hover {
+            background-color: rgba(76, 175, 80, 1);
+            transform: scale(1.1);
+            box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+        }
+
+        .movie-item .add-button {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .movie-item:hover .add-button {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .add-button span {
+            line-height: 1;
+            margin-top: -2px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            color: #fff;
+            margin: 0 0 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #4CAF50;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .search-results {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-sidebar {
+                position: static;
+                max-height: none;
+            }
+        }
+
+        /* Display mode styles */
+        .display-mode-toggle, .exit-display-mode {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .display-mode-toggle:hover, .exit-display-mode:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+
+        .exit-display-mode {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(51, 51, 51, 0.9);
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        .artistic-mode-active .exit-display-mode {
+            display: block;
+        }
+
+        /* Grid mode styles */
+        .poster-wall.grid-mode {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Artistic mode styles */
+        .poster-wall.artistic-mode {
+            position: relative;
+            min-height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .artistic-mode-active .container {
+            padding: 0;
+            max-width: none;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .artistic-mode-active .search-section,
+        .artistic-mode-active .controls {
+            display: none;
+        }
+
+        .poster-wall.artistic-mode .poster-container {
+            position: absolute;
+            cursor: move;
+            transition: all 0.5s ease;
+            transform-origin: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Size variations */
+        .poster-wall.artistic-mode .poster-container.size-large {
+            width: 20vw;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .poster-wall.artistic-mode .poster-container.size-medium {
+            width: 15vw;
+            min-width: 150px;
+            max-width: 220px;
+        }
+
+        .poster-wall.artistic-mode .poster-container.size-small {
+            width: 12vw;
+            min-width: 120px;
+            max-width: 180px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="pure-wall-toggle" onclick="togglePureWallMode()">Toggle Pure Wall</button>
+            <button class="display-mode-toggle" onclick="toggleDisplayMode()">Switch Display Mode</button>
+            <div class="zoom-control">
+                <label for="zoomSlider">Zoom:</label>
+                <input type="range" id="zoomSlider" min="50" max="150" value="100">
+                <span id="zoomLevel">100%</span>
+            </div>
+        </div>
+        <div class="search-section">
+            <h1>Movie Poster Wall</h1>
+            <form class="search-form" id="searchForm">
+                <input type="text" id="searchQuery" placeholder="Search movies or directors..." required>
+                <button type="submit">Search</button>
+            </form>
+            <div class="search-results" id="searchResults" style="display: none;">
+                <div id="moviesSection">
+                    <h2>Movies</h2>
+                    <div class="movie-grid" id="movieResults"></div>
+                </div>
+                <div id="directorsSection">
+                    <h2>Directors</h2>
+                    <div id="directorResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="poster-wall" class="poster-wall grid-mode">
+            {% for poster in posters %}
+            <div class="poster-container" data-id="{{ poster.id }}" onclick="showMovieDetails({{ poster.id }})">
+                <img src="{{ poster.poster_url }}" alt="{{ poster.title }}">
+                <button class="delete-button" onclick="event.stopPropagation(); deletePoster({{ poster.id }})">-</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="director-section" id="directorSection">
+            <div class="director-info">
+                <h2 class="director-name"></h2>
+            </div>
+            <div class="director-movies"></div>
+        </div>
+
+        <!-- Movie Details Modal -->
+        <div id="movieModal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <div class="modal-header">
+                    <img id="modalBackdrop" class="modal-backdrop" src="" alt="">
+                    <img id="modalPoster" class="modal-poster" src="" alt="">
+                    <div class="modal-title-section">
+                        <h1 id="modalTitle" class="modal-title"></h1>
+                        <div class="modal-metadata">
+                            <span id="modalRating" class="modal-rating"></span>
+                            <span id="modalRuntime"></span> | 
+                            <span id="modalReleaseDate"></span>
+                        </div>
+                        <div id="modalGenres" class="genres"></div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-section">
+                        <div class="modal-section-title">Overview</div>
+                        <p id="modalOverview"></p>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="modal-section-title">Director</div>
+                        <p id="modalDirector"></p>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">Cast</div>
+                        <div id="modalCast" class="cast-list"></div>
+                    </div>
+
+                    <div id="trailerSection" class="modal-section" style="display: none;">
+                        <div class="modal-section-title">Trailer</div>
+                        <div class="trailer-container">
+                            <iframe id="trailerFrame" allowfullscreen></iframe>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">Similar Movies</div>
+                        <div id="modalSimilar" class="similar-movies"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="exit-display-mode" onclick="exitDisplayMode()">Exit Display Mode</button>
+
+        <script>
+            const searchForm = document.getElementById('searchForm');
+            const searchResults = document.getElementById('searchResults');
+            const movieResults = document.getElementById('movieResults');
+            const directorResults = document.getElementById('directorResults');
+
+            searchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const query = document.getElementById('searchQuery').value;
+                
+                try {
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        displaySearchResults(data);
+                    } else {
+                        showMessage(data.error || 'Error searching', 'error');
+                    }
+                } catch (error) {
+                    showMessage('Error performing search', 'error');
+                }
+            });
+
+            function displaySearchResults(data) {
+                searchResults.style.display = 'block';
+                
+                // Display movies
+                movieResults.innerHTML = '';
+                if (data.movies && data.movies.length > 0) {
+                    data.movies.forEach(movie => {
+                        const movieElement = document.createElement('div');
+                        movieElement.className = 'movie-item';
+                        
+                        movieElement.innerHTML = `
+                            <button class="add-button" onclick="event.stopPropagation(); addMovieToPosterWall(${movie.id}, '${movie.title.replace(/'/g, "\\'")}', '${movie.poster_path}')">
+                                <span>+</span>
+                            </button>
+                            <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" 
+                                 alt="${movie.title}"
+                                 onclick="showMovieDetails(${movie.id})">
+                            <div class="movie-title">${movie.title}</div>
+                        `;
+                        
+                        movieResults.appendChild(movieElement);
+                    });
+                    document.getElementById('moviesSection').style.display = 'block';
+                } else {
+                    document.getElementById('moviesSection').style.display = 'none';
+                }
+
+                // Display directors
+                directorResults.innerHTML = '';
+                if (data.directors && data.directors.length > 0) {
+                    data.directors.forEach(director => {
+                        const directorSection = document.createElement('div');
+                        directorSection.className = 'director-section';
+                        
+                        let directorHtml = `
+                            <h3 class="director-name">${director.name}</h3>
+                            <div class="director-movies">
+                        `;
+                        
+                        director.movies.forEach(movie => {
+                            directorHtml += `
+                                <div class="movie-item">
+                                    <button class="add-button" onclick="event.stopPropagation(); addMovieToPosterWall(${movie.id}, '${movie.title.replace(/'/g, "\\'")}', '${movie.poster_path}')">
+                                        <span>+</span>
+                                    </button>
+                                    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" 
+                                         alt="${movie.title}"
+                                         onclick="showMovieDetails(${movie.id})">
+                                    <div class="movie-title">${movie.title}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        directorHtml += '</div>';
+                        directorSection.innerHTML = directorHtml;
+                        directorResults.appendChild(directorSection);
+                    });
+                    document.getElementById('directorsSection').style.display = 'block';
+                } else {
+                    document.getElementById('directorsSection').style.display = 'none';
+                }
+            }
+
+            const posterWall = document.getElementById('poster-wall');
+            const clearButton = document.getElementById('clearButton');
+            const zoomSlider = document.getElementById('zoomSlider');
+            const zoomLevel = document.getElementById('zoomLevel');
+            const zoomIn = document.getElementById('zoomIn');
+            const zoomOut = document.getElementById('zoomOut');
+
+            // Zoom control functions
+            function updateZoom(value) {
+                const baseSize = 200; // Base size of poster items
+                const newSize = (baseSize * value) / 100;
+                posterWall.style.gridTemplateColumns = `repeat(auto-fill, minmax(${newSize}px, 1fr))`;
+                zoomLevel.textContent = `${value}%`;
+                
+                // Update slider value if it wasn't the source of the change
+                zoomSlider.value = value;
+            }
+
+            zoomSlider.addEventListener('input', (e) => {
+                updateZoom(e.target.value);
+            });
+
+            zoomIn.addEventListener('click', () => {
+                const newValue = Math.min(parseInt(zoomSlider.value) + 10, 200);
+                updateZoom(newValue);
+            });
+
+            zoomOut.addEventListener('click', () => {
+                const newValue = Math.max(parseInt(zoomSlider.value) - 10, 50);
+                updateZoom(newValue);
+            });
+
+            // Save zoom level to localStorage
+            function saveZoomLevel(value) {
+                localStorage.setItem('posterWallZoom', value);
+            }
+
+            // Load saved zoom level
+            function loadSavedZoom() {
+                const savedZoom = localStorage.getItem('posterWallZoom');
+                if (savedZoom) {
+                    updateZoom(parseInt(savedZoom));
+                }
+            }
+
+            // Update zoom level when slider changes
+            zoomSlider.addEventListener('change', () => {
+                saveZoomLevel(zoomSlider.value);
+            });
+
+            // Load saved zoom level on page load
+            loadSavedZoom();
+
+            async function searchMovie(event) {
+                event.preventDefault();
+                const movieName = document.getElementById('movieName').value;
+
+                try {
+                    const response = await fetch('/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `movie_name=${encodeURIComponent(movieName)}`
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to search movie');
+                    }
+
+                    // Create new poster element
+                    const posterItem = document.createElement('div');
+                    posterItem.className = 'poster-container';
+                    posterItem.dataset.id = data.id;
+                    posterItem.innerHTML = `
+                        <img src="${data.poster_url}" alt="${data.title}">
+                        <button class="delete-button" onclick="event.stopPropagation(); deletePoster(${data.id})">-</button>
+                    `;
+
+                    // Add to the beginning of the wall
+                    posterWall.insertBefore(posterItem, posterWall.firstChild);
+
+                    // Show success message
+                    showMessage('Movie poster added successfully!', 'success');
+                    
+                    // Clear input
+                    document.getElementById('movieName').value = '';
+
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+
+            async function deletePoster(posterId) {
+                try {
+                    const response = await fetch('/delete-poster', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `poster_id=${posterId}`
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to delete poster');
+                    }
+
+                    // Remove poster element
+                    const posterElement = document.querySelector(`.poster-container[data-id="${posterId}"]`);
+                    if (posterElement) {
+                        posterElement.remove();
+                        showMessage('Poster deleted successfully!', 'success');
+                    }
+
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+
+            function showMessage(text, type) {
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = text;
+                messageDiv.className = type;
+                messageDiv.style.display = 'block';
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+
+            // Handle form submission
+            document.getElementById('searchForm').addEventListener('submit', searchMovie);
+
+            // Handle Enter key in the input field
+            document.getElementById('movieName').addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchMovie(event);
+                }
+            });
+
+            // Handle clear button click
+            clearButton.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/clear-posters', {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        posterWall.innerHTML = '';
+                        showMessage('All posters cleared!', 'success');
+                    }
+                } catch (error) {
+                    showMessage('Failed to clear posters', 'error');
+                }
+            });
+
+            // Add keyboard shortcuts for zoom
+            document.addEventListener('keydown', (e) => {
+                // Check if Ctrl/Cmd key is pressed
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === '=' || e.key === '+') {
+                        e.preventDefault();
+                        const newValue = Math.min(parseInt(zoomSlider.value) + 10, 200);
+                        updateZoom(newValue);
+                        saveZoomLevel(newValue);
+                    } else if (e.key === '-') {
+                        e.preventDefault();
+                        const newValue = Math.max(parseInt(zoomSlider.value) - 10, 50);
+                        updateZoom(newValue);
+                        saveZoomLevel(newValue);
+                    }
+                }
+            });
+
+            async function showMovieDetails(movieId) {
+                try {
+                    const response = await fetch(`/movie/${movieId}`);
+                    const movie = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(movie.error || 'Failed to fetch movie details');
+                    }
+
+                    // Update modal content
+                    document.getElementById('modalBackdrop').src = movie.backdrop_url || movie.poster_url;
+                    document.getElementById('modalPoster').src = movie.poster_url;
+                    document.getElementById('modalTitle').textContent = movie.title;
+                    document.getElementById('modalRating').textContent = `★ ${movie.vote_average}`;
+                    document.getElementById('modalRuntime').textContent = movie.runtime;
+                    document.getElementById('modalReleaseDate').textContent = movie.release_date;
+                    document.getElementById('modalOverview').textContent = movie.overview;
+                    document.getElementById('modalDirector').textContent = movie.director;
+
+                    // Update genres
+                    const genresHtml = movie.genres.map(genre => 
+                        `<span class="genre-tag">${genre}</span>`
+                    ).join('');
+                    document.getElementById('modalGenres').innerHTML = genresHtml;
+
+                    // Update cast
+                    const castHtml = movie.cast.map(member => `
+                        <div class="cast-item">
+                            <strong>${member.name}</strong><br>
+                            as ${member.character}
+                        </div>
+                    `).join('');
+                    document.getElementById('modalCast').innerHTML = castHtml;
+
+                    // Update trailer
+                    const trailerSection = document.getElementById('trailerSection');
+                    if (movie.trailer_key) {
+                        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${movie.trailer_key}`;
+                        trailerSection.style.display = 'block';
+                    } else {
+                        trailerSection.style.display = 'none';
+                    }
+
+                    // Update similar movies
+                    const similarHtml = movie.similar_movies.map(similar => `
+                        <div class="similar-movie" onclick="showMovieDetails(${similar.id})">
+                            <img src="${similar.poster_url}" alt="${similar.title}">
+                            <div class="similar-movie-title">${similar.title}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('modalSimilar').innerHTML = similarHtml;
+
+                    // Show modal
+                    document.getElementById('movieModal').style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+
+            function closeModal() {
+                const modal = document.getElementById('movieModal');
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore scrolling
+                
+                // Stop video if playing
+                const trailerFrame = document.getElementById('trailerFrame');
+                trailerFrame.src = '';
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('movieModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            }
+
+            // Pure Wall Mode Toggle Function
+            function togglePureWallMode() {
+                const container = document.querySelector('.container');
+                container.classList.toggle('pure-wall-mode');
+                
+                const button = document.querySelector('.pure-wall-toggle');
+                if (container.classList.contains('pure-wall-mode')) {
+                    button.textContent = 'Show UI';
+                    localStorage.setItem('pureWallMode', 'true');
+                } else {
+                    button.textContent = 'Toggle Pure Wall';
+                    localStorage.setItem('pureWallMode', 'false');
+                }
+            }
+
+            // Load Pure Wall Mode preference
+            document.addEventListener('DOMContentLoaded', () => {
+                const pureWallMode = localStorage.getItem('pureWallMode') === 'true';
+                if (pureWallMode) {
+                    togglePureWallMode();
+                }
+            });
+
+            // Search tabs functionality
+            function switchTab(tab) {
+                const movieForm = document.getElementById('searchForm');
+                const directorForm = document.getElementById('directorForm');
+                const movieTab = document.querySelector('.search-tab:nth-child(1)');
+                const directorTab = document.querySelector('.search-tab:nth-child(2)');
+                
+                if (tab === 'movie') {
+                    movieForm.style.display = 'flex';
+                    directorForm.style.display = 'none';
+                    movieTab.classList.add('active');
+                    directorTab.classList.remove('active');
+                } else {
+                    movieForm.style.display = 'none';
+                    directorForm.style.display = 'flex';
+                    movieTab.classList.remove('active');
+                    directorTab.classList.add('active');
+                }
+            }
+
+            // Director search functionality
+            const directorForm = document.getElementById('directorForm');
+            const directorSection = document.getElementById('directorSection');
+
+            directorForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const directorName = document.getElementById('directorName').value;
+                
+                try {
+                    const response = await fetch(`/search_director?name=${encodeURIComponent(directorName)}`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        displayDirectorMovies(data);
+                    } else {
+                        showMessage(data.error || 'Error searching for director', 'error');
+                    }
+                } catch (error) {
+                    showMessage('Error searching for director', 'error');
+                }
+            });
+
+            function displayDirectorMovies(directorData) {
+                const directorSection = document.getElementById('directorSection');
+                const directorName = directorSection.querySelector('.director-name');
+                const directorMovies = directorSection.querySelector('.director-movies');
+                
+                directorName.textContent = directorData.name;
+                directorMovies.innerHTML = '';
+                
+                directorData.movies.forEach(movie => {
+                    const movieElement = document.createElement('div');
+                    movieElement.className = 'director-movie';
+                    movieElement.onclick = () => showMovieDetails(movie.id);
+                    
+                    movieElement.innerHTML = `
+                        <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" 
+                             alt="${movie.title}">
+                        <div class="movie-title">${movie.title}</div>
+                    `;
+                    
+                    directorMovies.appendChild(movieElement);
+                });
+                
+                directorSection.classList.add('active');
+            }
+
+            async function addMovieToPosterWall(movieId, movieTitle, posterPath) {
+                try {
+                    const response = await fetch('/add-movie', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            id: movieId,
+                            title: movieTitle,
+                            poster_path: posterPath
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to add movie');
+                    }
+
+                    const data = await response.json();
+
+                    // Create new poster element
+                    const posterContainer = document.createElement('div');
+                    posterContainer.className = 'poster-container';
+                    posterContainer.setAttribute('data-id', movieId);
+                    posterContainer.onclick = () => showMovieDetails(movieId);
+
+                    posterContainer.innerHTML = `
+                        <img src="https://image.tmdb.org/t/p/w500${posterPath}" alt="${movieTitle}">
+                        <button class="delete-button" onclick="event.stopPropagation(); deletePoster(${movieId})">-</button>
+                    `;
+
+                    // Add to poster wall
+                    const posterWall = document.getElementById('poster-wall');
+                    posterWall.appendChild(posterContainer);
+
+                    // Show success message
+                    showMessage('Movie poster added successfully!', 'success');
+
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            let activeItem = null;
+
+            function toggleDisplayMode() {
+                const posterWall = document.getElementById('poster-wall');
+                const container = document.querySelector('.container');
+                const isArtistic = posterWall.classList.contains('artistic-mode');
+                
+                if (isArtistic) {
+                    exitDisplayMode();
+                } else {
+                    posterWall.classList.remove('grid-mode');
+                    posterWall.classList.add('artistic-mode');
+                    container.classList.add('artistic-mode-active');
+                    // Arrange posters randomly in artistic mode
+                    arrangePostersArtistically();
+                }
+                
+                localStorage.setItem('displayMode', posterWall.classList.contains('artistic-mode') ? 'artistic' : 'grid');
+            }
+
+            function exitDisplayMode() {
+                const posterWall = document.getElementById('poster-wall');
+                const container = document.querySelector('.container');
+                posterWall.classList.remove('artistic-mode');
+                posterWall.classList.add('grid-mode');
+                container.classList.remove('artistic-mode-active');
+                // Remove artistic styling
+                const posters = posterWall.getElementsByClassName('poster-container');
+                Array.from(posters).forEach(poster => {
+                    poster.style.transform = '';
+                    poster.style.left = '';
+                    poster.style.top = '';
+                    poster.classList.remove('size-large', 'size-medium', 'size-small');
+                });
+                localStorage.setItem('displayMode', 'grid');
+            }
+
+            function arrangePostersArtistically() {
+                const posterWall = document.getElementById('poster-wall');
+                const posters = Array.from(posterWall.getElementsByClassName('poster-container'));
+                const wallRect = posterWall.getBoundingClientRect();
+                
+                // Calculate available space
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                const margin = 20;
+
+                // Create a grid system
+                const rows = Math.ceil(Math.sqrt(posters.length));
+                const cols = Math.ceil(posters.length / rows);
+                
+                // Calculate cell size
+                const cellWidth = (screenWidth - (margin * 2)) / cols;
+                const cellHeight = (screenHeight - (margin * 2)) / rows;
+
+                posters.forEach((poster, index) => {
+                    // Determine size based on position
+                    const sizeClass = index % 5 === 0 ? 'size-large' : 
+                                    index % 3 === 0 ? 'size-medium' : 'size-small';
+                    
+                    poster.classList.remove('size-large', 'size-medium', 'size-small');
+                    poster.classList.add(sizeClass);
+
+                    // Calculate base position
+                    const row = Math.floor(index / cols);
+                    const col = index % cols;
+                    
+                    // Add some randomness while keeping structure
+                    const randomX = (Math.random() - 0.5) * (cellWidth * 0.3);
+                    const randomY = (Math.random() - 0.5) * (cellHeight * 0.3);
+                    
+                    const x = margin + (col * cellWidth) + randomX;
+                    const y = margin + (row * cellHeight) + randomY;
+                    
+                    // Random rotation between -15 and 15 degrees
+                    const rotation = (Math.random() - 0.5) * 30;
+                    
+                    poster.style.left = `${x}px`;
+                    poster.style.top = `${y}px`;
+                    poster.style.transform = `rotate(${rotation}deg)`;
+                    poster.style.zIndex = Math.floor(Math.random() * 10);
+                });
+            }
+
+            // Update layout on window resize
+            window.addEventListener('resize', () => {
+                if (document.getElementById('poster-wall').classList.contains('artistic-mode')) {
+                    arrangePostersArtistically();
+                }
+            });
+
+            // Dragging functionality for artistic mode
+            function dragStart(e) {
+                if (!document.getElementById('poster-wall').classList.contains('artistic-mode')) return;
+                
+                if (e.type === "touchstart") {
+                    initialX = e.touches[0].clientX - xOffset;
+                    initialY = e.touches[0].clientY - yOffset;
+                } else {
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                }
+
+                if (e.target.closest('.poster-container')) {
+                    activeItem = e.target.closest('.poster-container');
+                    isDragging = true;
+                    activeItem.style.zIndex = 1000;
+                }
+            }
+
+            function dragEnd(e) {
+                if (!activeItem) return;
+                
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+                activeItem.style.zIndex = '';
+                activeItem = null;
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                setTranslate(currentX, currentY, activeItem);
+            }
+
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+            }
+
+            // Add event listeners for dragging
+            document.addEventListener("touchstart", dragStart, false);
+            document.addEventListener("touchend", dragEnd, false);
+            document.addEventListener("touchmove", drag, false);
+            document.addEventListener("mousedown", dragStart, false);
+            document.addEventListener("mouseup", dragEnd, false);
+            document.addEventListener("mousemove", drag, false);
+
+            // Load display mode preference
+            document.addEventListener('DOMContentLoaded', () => {
+                const posterWall = document.getElementById('poster-wall');
+                const savedMode = localStorage.getItem('displayMode') || 'grid';
+                
+                if (savedMode === 'artistic') {
+                    posterWall.classList.add('artistic-mode');
+                    arrangePostersArtistically();
+                } else {
+                    posterWall.classList.add('grid-mode');
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>
